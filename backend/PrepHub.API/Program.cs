@@ -11,13 +11,20 @@ using PrepHub.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Database Context
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=localhost;Port=5432;Database=prephub;Username=postgres;Password=postgres";
+// 1. Database Context (Supports SQLite for instant zero-server local testing, PostgreSQL for Azure/Production)
+var dbProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=prephub.db";
 
 builder.Services.AddDbContext<PrepHubDbContext>(options =>
 {
-    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("PrepHub.Infrastructure"));
+    if (dbProvider.Equals("PostgreSQL", StringComparison.OrdinalIgnoreCase) && connectionString.Contains("Host="))
+    {
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("PrepHub.Infrastructure"));
+    }
+    else
+    {
+        options.UseSqlite(connectionString.Contains("Host=") ? "Data Source=prephub.db" : connectionString);
+    }
 });
 
 // 2. Identity
@@ -147,13 +154,48 @@ app.MapGet("/api/health", () => Results.Ok(new
     Timestamp = DateTime.UtcNow
 }));
 
-// Auto-seed database if enabled
+// Auto-seed database
 try
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<PrepHubDbContext>();
-    // If running in development with accessible database, seed
-    if (context.Database.IsRelational())
+    await context.Database.EnsureCreatedAsync();
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = ["Student", "Contributor", "Admin"];
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    var adminEmail = "admin@prephub.com";
+    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+    string adminId;
+    if (existingAdmin == null)
+    {
+        var admin = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true,
+            Name = "PrepHub Admin",
+            Batch = "Admin",
+            CreatedAt = DateTime.UtcNow
+        };
+        await userManager.CreateAsync(admin, "Admin@123");
+        await userManager.AddToRoleAsync(admin, "Admin");
+        adminId = admin.Id;
+    }
+    else
+    {
+        adminId = existingAdmin.Id;
+    }
+
+    // Seed courses if empty
+    if (!await context.Courses.AnyAsync())
     {
         await SeedData.InitializeAsync(app.Services);
     }
