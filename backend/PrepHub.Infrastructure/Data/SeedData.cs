@@ -21,7 +21,14 @@ public static class SeedData
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        await context.Database.MigrateAsync();
+        if (!context.Database.IsSqlite())
+        {
+            try { await context.Database.MigrateAsync(); } catch { await context.Database.EnsureCreatedAsync(); }
+        }
+        else
+        {
+            await context.Database.EnsureCreatedAsync();
+        }
 
         await SeedRolesAsync(roleManager);
         var adminId = await SeedAdminUserAsync(userManager);
