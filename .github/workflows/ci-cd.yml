@@ -1,0 +1,49 @@
+name: Crack30 CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-backend:
+    name: Build & Test Backend (.NET 8)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Backend Dependencies
+        run: dotnet restore backend/PrepHub.slnx
+
+      - name: Build Backend
+        run: dotnet build backend/PrepHub.slnx --no-restore --configuration Release
+
+      - name: Run Backend Tests
+        run: dotnet test backend/PrepHub.Tests/PrepHub.Tests.csproj --no-build --configuration Release
+
+  build-frontend:
+    name: Build Frontend (React + Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci || npm install --legacy-peer-deps
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build

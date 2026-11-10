@@ -1,0 +1,45 @@
+{
+  "mcqs": [
+    {
+      "chapterId": 1,
+      "question": "What is the default value of a boolean variable in C#?",
+      "optionA": "true",
+      "optionB": "false",
+      "optionC": "null",
+      "optionD": "0",
+      "correctOption": "B",
+      "explanation": "In C#, the default value of a boolean variable is false.",
+      "difficulty": "Easy",
+      "tags": ["basics", "data-types"]
+    },
+    {
+      "chapterId": 1,
+      "question": "Which keyword is used to define a constant in C#?",
+      "optionA": "static",
+      "optionB": "final",
+      "optionC": "const",
+      "optionD": "readonly",
+      "correctOption": "C",
+      "explanation": "The 'const' keyword is used to declare a compile-time constant in C#. 'readonly' is for runtime constants.",
+      "difficulty": "Easy",
+      "tags": ["basics", "constants"]
+    }
+  ],
+  "interviewQuestions": [
+    {
+      "chapterId": 5,
+      "question": "What is the difference between an abstract class and an interface in C#?",
+      "modelAnswer": "An abstract class can have implemented methods, fields, and constructors, while an interface (prior to C# 8) can only have method signatures. A class can implement multiple interfaces but inherit only one abstract class. Use abstract classes for 'is-a' relationships and interfaces for 'can-do' contracts.",
+      "difficulty": "Medium",
+      "frequency": "Common",
+      "tags": ["oop", "abstract", "interface"]
+    }
+  ],
+  "notes": [
+    {
+      "chapterId": 5,
+      "title": "OOP Quick Revision",
+      "markdownBody": "# OOP in C# - Quick Revision\n\n## Four Pillars\n1. **Encapsulation** - Bundling data with methods, using access modifiers\n2. **Inheritance** - Deriving new classes from existing ones\n3. **Polymorphism** - Same interface, different implementations\n4. **Abstraction** - Hiding complexity, showing essentials\n\n## Key Points\n- Use `virtual` and `override` for runtime polymorphism\n- Use `abstract` for classes that shouldn't be instantiated\n- Prefer composition over inheritance when possible"
+    }
+  ]
+}
